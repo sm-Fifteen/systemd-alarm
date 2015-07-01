@@ -1,0 +1,11 @@
+[Unit]
+Description=An alarmclock set to wakeup the computer at 6:20
+
+[Timer]
+Unit=alarmclock.service
+OnCalendar=*-*-* 6:20
+WakeSystem=true
+Persistent=true
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=An alarm clock set to run for 45 minutes before shutting down
+RefuseManualStart=false
+RefuseManualStop=false
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/timeout 45m /home/user/alarm/alarmclock
