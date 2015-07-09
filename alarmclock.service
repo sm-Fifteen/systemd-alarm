@@ -5,4 +5,4 @@ RefuseManualStop=false
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/timeout 45m /home/user/alarm/alarmclock
+ExecStart=/usr/bin/timeout 45m /home/user/.config/systemd/user/alarmclock
