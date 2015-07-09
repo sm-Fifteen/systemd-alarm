@@ -1,10 +1,12 @@
 #!/bin/sh
-sinkName="alsa_output.pci-0000_00_1b.0.analog-stereo"
-sink=$(pactl list short sinks | grep $sinkName | cut -f1)
-sound="/home/user/alarm/music/bullets_loop.wav" #Must be an abs path
+sinkName="CHANGEME"
+soundClipPath="CHANGEME" #Must be an abs path
+
+# DO NOT EDIT ANY FURTHER
+sink=$(pactl list short sinks | grep "$sinkName" | cut -f1)
 pipe=/tmp/pactl-output$$
 
-if [ -z $sink ];then
+if [ -z "$sink" ];then
 	echo "No sink by the name of \"$sinkname\", aborting."
 	exit 1
 else
@@ -12,36 +14,36 @@ else
 fi
 
 #Subscribe a custom pipe to pactl
-mkfifo $pipe
-pactl subscribe > $pipe&
+mkfifo "$pipe"
+pactl subscribe > "$pipe"&
 
-pactl set-sink-mute $sink 0
-pactl set-sink-volume $sink 25%
+pactl set-sink-mute "$sink" 0
+pactl set-sink-volume "$sink" 25%
 echo "Volume at 25%"
-ffplay $sound -loop 0 -nodisp -loglevel quiet&
+ffplay "$soundClipPath" -loop 0 -nodisp -loglevel quiet&
 
 #Wait for ffplay to register (2 events for the creation and the deletion of a
 #first ffmpeg stream plus another one, the real one, which closes the grep)
-cat $pipe | grep -m2 sink-input
+cat "$pipe" | grep -m2 sink-input
 
 #Switch all sources to our sink once it's done
 #Can't use the id from the pipe, as ffplay somehow changes stream right at the start
 echo "FFplay has registered."
-pactl list short sink-inputs|while read sinkInput; do
-	sourceId=$(echo $sinkInput|cut -d' ' -f1)
+pactl list short sink-inputs | while read sinkInput; do
+	sourceId="$(echo '$sinkInput' | cut -d' ' -f1)"
 	echo "Moving #$sourceId to sink #$sink"
-	pactl move-sink-input $sourceId $sink
+	pactl move-sink-input "$sourceId" "$sink"
 done
 
 #The pipe can now be deleted
-if [ -p $pipe ];then
-	rm $pipe
+if [ -p "$pipe" ];then
+	rm "$pipe"
 fi
 
 #Increase the volume by 40% over a minute and twenty seconds
 for i in {1..8}; do
 	sleep 10s
-	pactl set-sink-volume $sink +5%
+	pactl set-sink-volume "$sink" +5%
 	echo "Volume up by 5%"
 done
 
