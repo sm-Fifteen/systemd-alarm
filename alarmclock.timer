@@ -1,5 +1,5 @@
 [Unit]
-Description=An alarmclock set to wakeup the computer at 6:20
+Description=Alarm clock timer (Can wake up system)
 
 [Timer]
 Unit=alarmclock.service

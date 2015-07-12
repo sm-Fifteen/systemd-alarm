@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Mandatory parameters
+soundClipPath="" #Abs path
+sinkName="" #Check `pactl list short sinks`
+initialVolume="25%"
+
+# Increasing volume
+volumeStepIncrease="+5%"
+volumeStepDuration="10s"
+volumeSteps="8" #Stuck to 8 for now
+
+# Maximum duration
+alarmTimeout="5s"
+
+# Check for non-coreutils deps
+# Blatently stolen from : http://stackoverflow.com/a/4785518/2178646
+command -v ffplay >/dev/null 2>&1 || { echo "ffplay not found. systemd-alarmclock requires on ffmpeg." >&2; exit 1; }
+command -v pactl >/dev/null 2>&1 || { echo "pactl not found. systemd-alarmclock requires on pulseaudio." >&2; exit 1; }
+
+# Check if soundClipPath exists
+if [ ! -e "$soundClipPath" ]; then
+	echo "$soundClipPath : file not found, aborting."
+	exit 1
+fi
+
+
+sink=$(pactl list short sinks | grep "$sinkName" | cut -f1)
+
+if [ -z "$sink" ];then
+	echo "No sink by the name of \"$sinkname\", aborting."
+	exit 1
+else
+	echo "Sink #$sink"
+fi
+
+cd "$( dirname "${BASH_SOURCE[0]}")"
+if [ -n "$alarmTimeout" ]; then
+	timeout "$alarmTimeout" ./alarmclock "$soundClipPath" "$sink" \
+		"$initialVolume" "$volumeStepIncrease" \
+		"$volumeStepDuration" "$volumeSteps"
+else
+	./alarmclock "$soundClipPath" "$sink" "$initialVolume" \
+		"$volumeStepIncrease" "$volumeStepDuration" "$volumeSteps"
+fi
+
+
