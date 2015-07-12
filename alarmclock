@@ -37,8 +37,8 @@ fi
 
 #Increase the volume over time
 if [ $volumeSteps != "0" ] && [ $volumeStepIncrease != "+0%" ] && [ $volumeStepDuration != "0s" ]; then
-#FIXME : Fuck me, bash does bracket expansion BEFORE variable expansion?
-	for i in {0..8}; do
+#Fuck me, bash does bracket expansion BEFORE variable expansion?
+	for i in $(eval echo {0..$volumeSteps}); do
 		echo $i
 		sleep $volumeStepDuration
 		pactl set-sink-volume "$sink" $volumeStepIncrease
