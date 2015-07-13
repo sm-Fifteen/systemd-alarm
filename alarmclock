@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 soundClipPath=${1:?"\$soundClipPath not set, check start-alarmclock."}
 sink=${2:?"\$sink not set, check start-alarmclock."}
 initalVolume=${3:?"\$initialVolume not set, check start-alarmclock."}
@@ -16,6 +16,7 @@ pactl set-sink-mute "$sink" 0
 pactl set-sink-volume "$sink" "$initalVolume"
 echo "Volume at $initalVolume"
 ffplay "$soundClipPath" -loop 0 -nodisp -loglevel quiet&
+ffplayPID=$!
 
 #Wait for ffplay to register (2 events for the creation and the deletion of a
 #first ffmpeg stream plus another one, the real one, which closes the grep)
@@ -39,12 +40,11 @@ fi
 if [ $volumeSteps != "0" ] && [ $volumeStepIncrease != "+0%" ] && [ $volumeStepDuration != "0s" ]; then
 #Fuck me, bash does bracket expansion BEFORE variable expansion?
 	for i in $(eval echo {0..$volumeSteps}); do
-		echo $i
 		sleep $volumeStepDuration
 		pactl set-sink-volume "$sink" $volumeStepIncrease
 		echo "Volume up by $volumeStepIncrease"
-	done
-
-	echo "Volume at maximum"
+	done && echo "Volume at maximum"&
 fi
-wait
+wait $ffplayPID
+#Stop fiddling with the volume if/when ffplay dies
+kill $(jobs -p)

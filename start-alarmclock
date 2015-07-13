@@ -2,11 +2,11 @@
 
 # Mandatory parameters
 soundClipPath="" #Abs path
-sinkName="" #Check `pactl list short sinks`
+sinkName="" #Check `pactl list short sinks`, it looks like "alsa_output.pci-0000_00_1b.0.analog-stereo"
 initialVolume="25%"
 
 # Increasing volume
-volumeStepIncrease="+10%"
+volumeStepIncrease="+5%"
 volumeStepDuration="10s"
 volumeSteps="8"
 
@@ -24,24 +24,27 @@ if [ ! -e "$soundClipPath" ]; then
 	exit 1
 fi
 
-
 sink=$(pactl list short sinks | grep "$sinkName" | cut -f1)
+echo "Sink #${sink:?No sink by the name of \"$sinkName\".}"
 
-if [ -z "$sink" ];then
-	echo "No sink by the name of \"$sinkname\", aborting."
-	exit 1
-else
-	echo "Sink #$sink"
-fi
+scriptArgs=($soundClipPath $sink $initialVolume $volumeStepIncrease \
+		$volumeStepDuration $volumeSteps)
+
+trap : INT TERM
 
 cd "$( dirname "${BASH_SOURCE[0]}")"
 if [ -n "$alarmTimeout" ]; then
-	timeout "$alarmTimeout" ./alarmclock "$soundClipPath" "$sink" \
-		"$initialVolume" "$volumeStepIncrease" \
-		"$volumeStepDuration" "$volumeSteps"
+	timeout "$alarmTimeout" ./alarmclock ${scriptArgs[@]}&
 else
-	./alarmclock "$soundClipPath" "$sink" "$initialVolume" \
-		"$volumeStepIncrease" "$volumeStepDuration" "$volumeSteps"
+	./alarmclock ${scriptArgs[@]}&
 fi
 
+# One of the less obvious things in bash is how signals propagate through subprocesses
+# Gracefully solved by : http://stackoverflow.com/a/1645157
+childPID=$!
+wait $childPID
 
+if [[ $? -gt 128 ]]
+then
+    kill $childPID
+fi

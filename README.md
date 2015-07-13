@@ -18,7 +18,7 @@ As a regular user, put the content of this repository in `~/.config/systemd/user
 * Try running the script manually once you're done, to make sure it works properly.
 
 # Usage
-* To enable the alarm, simply type (as a regular user) `systemctl --user enable alarmclock.timer`.
+* To enable the alarm, simply type (as a regular user) `systemctl --user enable --now alarmclock.timer`.
 * You can then verify that the timer has been set properly by ensuring it's listed in the output of `systemctl --user list-timers`.
 * Once the alarm starts, it can be stopped with a `systemctl --user stop alarmclock`. Feel free to create an alias for that command.
 * Don't forget to run `$systemctl --user daemon-reload` after any changes to alarmclock.timer and alarmclock.service to make sure they've been registered properly.
