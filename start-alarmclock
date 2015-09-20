@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Mandatory parameters
+soundClipPath="" #Abs path
+sinkName="" #Check `pactl list short sinks`, it looks like "alsa_output.pci-0000_00_1b.0.analog-stereo"
+initialVolume="25%"
+
+# Increasing volume
+volumeStepIncrease="+5%"
+volumeStepDuration="10s"
+volumeSteps="8"
+
+# Maximum duration
+alarmTimeout="45m"
+
+# Check for non-coreutils deps
+# Blatently stolen from : http://stackoverflow.com/a/4785518/2178646
+command -v ffplay >/dev/null 2>&1 || { echo "ffplay not found. systemd-alarmclock requires on ffmpeg." >&2; exit 1; }
+command -v pactl >/dev/null 2>&1 || { echo "pactl not found. systemd-alarmclock requires on pulseaudio." >&2; exit 1; }
+
+# Check if soundClipPath exists
+if [ ! -e "$soundClipPath" ]; then
+	echo "$soundClipPath : file not found, aborting."
+	exit 1
+fi
+
+sink=$(pactl list short sinks | grep "$sinkName" | cut -f1)
+echo "Sink #${sink:?No sink by the name of \"$sinkName\".}"
+
+scriptArgs=($soundClipPath $sink $initialVolume $volumeStepIncrease \
+		$volumeStepDuration $volumeSteps)
+
+trap : INT TERM
+
+cd "$( dirname "${BASH_SOURCE[0]}")"
+if [ -n "$alarmTimeout" ]; then
+	timeout "$alarmTimeout" ./alarmclock ${scriptArgs[@]}&
+else
+	./alarmclock ${scriptArgs[@]}&
+fi
+
+# One of the less obvious things in bash is how signals propagate through subprocesses
+# Gracefully solved by : http://stackoverflow.com/a/1645157
+childPID=$!
+wait $childPID
+
+if [[ $? -gt 128 ]]
+then
+    kill $childPID
+fi
