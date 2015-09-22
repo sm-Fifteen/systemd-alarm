@@ -4,5 +4,5 @@ RefuseManualStart=false
 RefuseManualStop=false
 
 [Service]
-Type=oneshot
-ExecStart=%h/.config/systemd/user/start-alarmclock
+Type=simple
+ExecStart=/bin/bash %h/.config/systemd/user/start-alarmclock
